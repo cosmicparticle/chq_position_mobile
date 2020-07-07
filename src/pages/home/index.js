@@ -27,21 +27,34 @@ class Home extends Component{
         this.props.history.push(`/${value}`)
     }
 
+    // 跳转地图
+    goMapPage=(value)=>{
+        console.log("sssss");
+
+        if (value == 1) {
+            this.props.history.push(`/fmhome`)
+        } else if (value == 2) {
+            this.props.history.push(`/customPage/fm/2`)
+        } else if (value ==3) {
+            this.props.history.push(`/customPage/fm/3`)
+        }
+    }
+
     render() {
         return(
             <div className="homePage_div">
                 <div className="top_div">辰麒人员定位管理系统</div>
                 <div className="main_div">
                 <div className="nav_list_div" id="nav_list_div">
-                    <div className="item_div ssdw_div">
+                    <div className="item_div ssdw_div"  onClick={this.goMapPage.bind(this,1)}>
                         <img src={ssdwImg}/>
                         <div className="text_div">实时定位</div>
                     </div>
-                    <div className="item_div ryzz_div">
+                    <div className="item_div ryzz_div"  onClick={this.goMapPage.bind(this,2)}>
                         <img src={ryzzImg}/>
                         <div className="text_div">人员追踪</div>
                     </div>
-                    <div className="item_div gjfx_div">
+                    <div className="item_div gjfx_div"  onClick={this.goMapPage.bind(this,3)}>
                         <img src={gjfxImg}/>
                         <div className="text_div">轨迹分析</div>
                     </div>

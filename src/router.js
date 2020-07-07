@@ -12,6 +12,11 @@ import User from './pages/user'
 import ActTable from './pages/actTable'
 import Details from './pages/details'
 
+// 蜂鸟云
+import FmHome from './pages/fmhome'
+import HisRoute from './pages/fmhome/historicalRoute'
+import PeopleTrace from './pages/fmhome/peopleTrace'
+
 export default class Router extends React.Component {
 	render() {
 		return(
@@ -26,6 +31,10 @@ export default class Router extends React.Component {
                                 <Route path='/bjInfo' component={BjInfo}/>
                                 <Route path='/dataTj' component={DataTj}/>
                                 <Route path='/fixedSet' component={FixedSet}/>
+                                
+                                <Route path='/fmhome' component={FmHome} exact/>
+                                <Route path='/customPage/fm/2' component={PeopleTrace} exact/>
+                                <Route path='/customPage/fm/3' component={HisRoute} exact/>
 
                                 <Route path='/testHome' component={TestHome} />
                                 <Route path='/user' component={User} />
