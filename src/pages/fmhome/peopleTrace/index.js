@@ -5,7 +5,8 @@ import '../style.css';
 import Super from "./../../../super"
 import Units from './../../../units'
 import moment from 'moment';
-import { Select, Button, message, Slider,DatePicker, TimePicker } from 'antd';
+import { Select,  message } from 'antd';
+import { Drawer,Toast, Button, List, NavBar, Icon, Popover , SegmentedControl, DatePicker} from 'antd-mobile';
 import locale from 'antd/lib/date-picker/locale/zh_CN';
 
 const Option = Select.Option;
@@ -112,8 +113,9 @@ export default class PeopleTrace extends React.Component{
             clearMakerBtn : false, 
             popMarkerList : [],
 
-  
-
+            // 抽屉开关
+            open: false,
+            docked: true,
 
         }
     }
@@ -891,7 +893,7 @@ console.log("显示图片");
      */
      getLocationList= async (typeValue, pageSize=200)=> {
         let result = null;
-        debugger
+        
         await Super.super({
             url:'api2/ks/clist/location/list/data',
             query:{
@@ -900,8 +902,8 @@ console.log("显示图片");
             } ,
             method:"GET"
         }).then((res)=>{
-            console.log("zhel");
-            debugger
+
+            
             result =  res;
         })
 
@@ -955,12 +957,14 @@ trace= async ()=>{
     this.clearMaker()
     let locationType = this.state.locationType;
     if (locationType == null){
-        message.info("请选择定位类型");
+        // message.info("请选择定位类型");
+        Toast.info('请选择定位类型', 2, null, false);
         return;
     }
     let locationTime = this.state.locationTime;
     if (locationTime == null){
-        message.info("请选择时间");
+        // message.info("请选择时间");
+        Toast.info('请选择时间', 2, null, false);
         return;
     }
   console.log("locationType: " + locationType + " locationTime: " + locationTime);
@@ -1116,8 +1120,8 @@ tracetwo=(coordsTag)=>{
  * 获取日期时间
  */
 onOk=(ov)=>{   
-    console.log(ov)
-    let locationTime = ov.format("YYYY-MM-DD HH:mm:ss");
+        console.log(ov)
+    let locationTime = moment(parseInt(ov.getTime())).format("YYYY-MM-DD HH:mm:ss"); 
     console.log(locationTime)
     this.setState({
         locationTime : locationTime,
@@ -1178,7 +1182,7 @@ singleHis=(tagCode, startTime, endTime, pageSize)=>{
         method:"GET"
     }).then((res)=>{
         let arrHistory =  res.result.entities;
-        debugger
+        
         arrHistory.forEach((element) => {
             let coordHistory = element.基本属性组.坐标点;
             let  tagCodeHistory= element.基本属性组.标签编号;
@@ -1229,42 +1233,68 @@ singleHis=(tagCode, startTime, endTime, pageSize)=>{
         setTimeout(resolve,ms);
     })
 }
+// 抽屉开关方法
+onOpenChange = (...args) => {
+
+    this.setState({ 
+        open: !this.state.open,
+    });
+  }
 
 
 /**
  * 初始化按钮
  */
 initFormList=()=>{  
-
+    const Item = Popover.Item;
     // 人员追踪
-    const { Option } = Select;
-    
     const formItemList=[];
 
-    const dd = <Select defaultValue="人员"  style={{ width: 120,}}  onChange={
-                    (value)=>{ 
-                        this.setState({locationType:value})
-                    }
-                 }>
-                <Option  value="人员" >人员</Option>      
-                <Option  value="车辆" >车辆</Option>      
-                <Option  value="物品" >物品</Option>           
-            </Select>
-
-    const aa = <DatePicker
-                ranges={{
-                    Today: [moment(), moment()],
-                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+    const sidebar = (<div>
+        <SegmentedControl
+        
+          values={['人员', '车辆', '物品']}
+          onValueChange={(value)=>{    
+                console.log(value);    
+                 this.setState({locationType:value})
                 }}
-                showTime
-                locale={locale}
-                format="YYYY/MM/DD HH:mm:ss"
-                onOk={this.onOk.bind(this)}
-                />
-    const bb =  <Button  onClick={this.trace.bind(this)}>确定</Button>
-    formItemList.push(dd)
-    formItemList.push(aa)
-    formItemList.push(bb)
+        />
+           
+        <DatePicker
+          value={this.state.date}
+          onChange={this.onOk.bind(this)}
+          
+        >
+          <List.Item arrow="horizontal">时间</List.Item>
+        </DatePicker>
+
+        <Button  onClick={this.trace.bind(this)}>确定</Button>
+
+
+    </div>);
+
+{/* <div style={this.getStyle()} id={'fengMap'}></div> */}
+
+const dia =   (<div>
+    <NavBar icon={<Icon type="ellipsis" />} 
+    onLeftClick={(e)=>{
+        e.preventDefault()
+        this.onOpenChange()
+        }}>人员追踪</NavBar>
+    <Drawer
+      className="my-drawer"
+      style={{ minHeight: document.documentElement.clientHeight }}
+      enableDragHandle
+      contentStyle={{ color: '#A6A6A6', textAlign: 'center', paddingTop: 42 }}
+      sidebar={sidebar}
+      open={this.state.open}
+      onOpenChange={this.onOpenChange.bind(this)}
+    >
+     <div style={this.getStyle()} id={'fengMap'}></div>
+    </Drawer>
+  </div>);
+
+    formItemList.push(dia);
        
     return formItemList;
 }
@@ -1350,7 +1380,7 @@ getSelectList=()=>{
         const { Option } = Select;
         return (
             <div >
-                 <div style={this.getStyle()} id={'fengMap'}></div>
+                  {/* <div style={this.getStyle()} id={'fengMap'}></div> */}
                 <div  id="fmbtnsGroup" className="fmbtnsGroup">
                     {this.initFormList()}              
                  </div>
