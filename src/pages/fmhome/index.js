@@ -1208,6 +1208,10 @@ onSelect = (opt) => {
     });
   };
 
+  goPage=(value)=>{
+    this.props.history.push(`/${value}`);
+}
+
 /**
  * 初始化按钮
  */
@@ -1218,6 +1222,7 @@ initFormList=()=>{
       const dia =   (<div>
             <NavBar
               mode="light"
+              icon={<Icon type="left" onClick={this.goPage.bind(this,'home')} ></Icon>} 
               rightContent={
                 <Popover mask
                   overlayClassName="fortest"

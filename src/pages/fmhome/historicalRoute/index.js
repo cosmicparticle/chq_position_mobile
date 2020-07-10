@@ -1,12 +1,14 @@
 import React from 'react'
-import {Col, Row} from 'antd';
 import fengmap from 'fengmap';
 import '../style.css';
 import Super from "./../../../super"
 import Units from './../../../units'
 import moment from 'moment';
-import { Select, Button, message, Slider,DatePicker, TimePicker } from 'antd';
+import { Drawer,Picker, Toast, CustomChildren, Button, List, NavBar, Icon, Popover , SegmentedControl, DatePicker} from 'antd-mobile';
 import locale from 'antd/lib/date-picker/locale/zh_CN';
+
+import Select from 'antd/lib/select';
+import  'antd/lib/select/style/index.css'
 
 const Option = Select.Option;
 
@@ -107,9 +109,9 @@ export default class HisRoute extends React.Component{
             // 单个人员历史轨迹的属性
             singleDate:null,
             singleStartTime:null,
-            singleStartTimeStamp:0,
+            singleStartTimeStamp:null,
             singleEndTime: null,
-            singleEndTimeStamp:180,
+            singleEndTimeStamp:null,
             singleLocatingEntity:null, 
             singleHisObj:{
                 // "t15151551":{}
@@ -144,6 +146,10 @@ export default class HisRoute extends React.Component{
             naviLines : [],   
             // 存放画线的点集
             points : [],
+
+             // 抽屉开关
+             open: false,
+             
 
         }
     }
@@ -220,7 +226,7 @@ export default class HisRoute extends React.Component{
             //设置主题
             defaultThemeName: '2001',
           mapScaleLevelRange: [16, 23],       // 比例尺级别范围， 16级到23级
-          defaultMapScaleLevel: 18,          // 默认比例尺级别设置为19级
+          defaultMapScaleLevel: 17,          // 默认比例尺级别设置为19级
 
           //方向枚举型。可设置正南、正北、正东、正西、东南、西南等方向值。具体可参考fengmap.FMDirection类。
           defaultControlsPose: 200,
@@ -1123,14 +1129,15 @@ tracetwo=(coordsTag)=>{
  * 获取日期时间
  */
 onOk=(ov)=>{   
-    let startTime = ov[0].format("YYYY-MM-DD HH:mm:ss");
-    let endTime = ov[1].format("YYYY-MM-DD HH:mm:ss");
-    console.log("startTime: " + startTime);
-    console.log("endTime: " + endTime);
+    console.log(ov)
+    let singleDate = moment(parseInt(ov.getTime())).format("YYYY-MM-DD"); 
+debugger
     this.setState({
-        startTime,
-        endTime
+        singleDate:singleDate,
+        singleHisObj:{},
+        date:ov,
     })
+
 }
 
 
@@ -1140,23 +1147,26 @@ onOk=(ov)=>{
  */
 singleOk= async (e)=>{
     // 获取定位实体对应的标签标号
+    debugger
     let singleDate =  this.state.singleDate;
     let singleLocatingEntity =  this.state.singleLocatingEntity;
     let singleStartTime =   this.state.singleStartTime;
     let singleEndTime =  this.state.singleEndTime;
 
+    debugger
     if (singleDate === null) {
-        message.info("请选择日期!")  
+        Toast.info('请选择日期', 2, null, false);
         e.preventDefault();  
         return   
         }
     if (singleStartTime === null || singleEndTime === null) {
-        message.info("请选择开始时间和结束时间!")  
+        Toast.info('请选择开始时间和结束时间', 2, null, false);
+
         e.preventDefault();  
         return                       
     }
-    if (singleLocatingEntity ===null) {
-        message.info("请选择定位实体!")                    
+    if (singleLocatingEntity ===null) {   
+        Toast.info('请选择定位实体', 2, null, false);              
         e.preventDefault();  
         return                  
     }
@@ -1235,7 +1245,7 @@ singleHis= async (tagCode, startTime, endTime, pageSize)=>{
         
         console.log("hhha: singleHisObjA: ");
         console.log(singleHisObjA);
-        message.info("轨迹加载完成！");
+        Toast.info('轨迹加载完成！', 2, null, false);              
 
         // 开始播放
         this.singlePlay()
@@ -1307,7 +1317,7 @@ singlePlay= async ()=>{
             let singLeList = singleHisObj[singleLocatingEntityA];
 
             if (singLeList === undefined || singLeList.length === 0) {
-                message.info("无历史轨迹数据,请重新加载")
+                Toast.info('无历史轨迹数据,请重新加载', 2, null, false);              
                 this.setState({
                     isSingleTrack: false,
                     curPlayCount:singleStartTimeStamp,
@@ -1428,7 +1438,7 @@ singlePlay= async ()=>{
             debugger
 
             if ((len-2) <= this.state.playCount) {
-                message.info("轨迹播放完毕");
+                Toast.info('轨迹播放完毕', 2, null, false);   
                 this.setState({
                     isSingleTrack: false,
                     curPlayCount:singleStartTimeStamp,
@@ -1439,7 +1449,9 @@ singlePlay= async ()=>{
             debugger
 }
 
-
+goPage=(value)=>{
+    this.props.history.push(`/${value}`);
+}
 
 formatter(value) {
     // value 的值是从1到一百
@@ -1556,7 +1568,13 @@ formatter(value) {
                 naviLines = [];
             }*/
         }
+// 抽屉开关方法
+onOpenChange = (...args) => {
 
+    this.setState({ 
+        open: !this.state.open,
+    });
+  }
 
 /**
  * 初始化按钮
@@ -1566,113 +1584,157 @@ initFormList=()=>{
     const { Option } = Select;
     const formItemList=[];
     // 人员历史轨迹
-           const row =  <Row key={1}>
-                <Col span={2}>
-                    <Select defaultValue="按时间"  style={{width:'100%',}} disabled={this.state.isSingleTrack}   onSelect={
-                        (obj)=>{ 
-                            console.log(obj);
-                            this.setState({
-                                trackPattern:obj,
-                                singleHisObj:{},
-                            })
-                        }
-                    }>
-                        <Option value="1">按时间</Option>
-                        <Option  value="2" >按轨迹</Option>      
-                    </Select>
-                </Col>
-                <Col span={3}>
-                    <DatePicker  style={{width:'100%',}} onChange={(ov)=>{
-                                 let singleDate = ov.format("YYYY-MM-DD");
-                                    console.log(singleDate);
-                                 this.setState({
-                                    singleDate:singleDate,
-                                    singleHisObj:{},
-                                })
-                               
-                             }} disabled={this.state.isSingleTrack} />
-                </Col>           
-                <Col span={2}>
-                        <TimePicker style={{width:'100%',}}  placeholder="开始时间"
-                            defaultOpenValue={moment('09:00:00', 'HH:mm:ss')}
-                            onChange={(time, timeString)=>{
-                                console.log(timeString);   
 
-                                    let singleStartTimeStamp = new Date(this.state.singleDate + " "  + timeString).getTime();
-                                    console.log("singleStartTimeStamp:" + singleStartTimeStamp);          
-                                    this.setState({
-                                        singleStartTime:timeString,
-                                        singleStartTimeStamp:singleStartTimeStamp,
-                                        curPlayCount:singleStartTimeStamp,
-                                        singleHisObj:{},
-                                    })
-                                }
-                            }
-                            disabled={this.state.isSingleTrack}  />
-                      </Col>  
-                      <Col span={2}>
-                        <TimePicker  style={{width:'100%',}}   placeholder="结束时间"
-                            defaultOpenValue={moment('10:00:00', 'HH:mm:ss')}
-                            onChange={(time, timeString)=>{
-                                console.log(timeString);   
-                                let singleEndTimeStamp = new Date(this.state.singleDate + " "  + timeString).getTime();
-                                    this.setState({
-                                        singleEndTime:timeString,
-                                        singleEndTimeStamp:singleEndTimeStamp,
-                                        curPlayCount:this.state.singleStartTimeStamp,
-                                        singleHisObj:{},
-                                    })
-                                }
-                            }
-                            disabled={this.state.isSingleTrack}  />
-                </Col>
-                <Col span={3}>
-                    <Select  style={{width:'100%',}} disabled={this.state.isSingleTrack}  labelInValue   onSelect={
-                        (obj)=>{ 
-                            this.setState({
-                                singleLocatingEntity:obj.key,
-                                singleHisObj:{},
-                            })
-                        }
-                    }>
-                        {this.getSelectList()}              
-                    </Select>
-                </Col>
-                <Col span={2}>
-                     <Button   disabled={this.state.isSingleTrack}   onClick={(e)=>{this.singleOk(e)}}>加载轨迹</Button>
-                </Col>
+        const sidebar = (<div>
+            <Picker 
+            disabled={this.state.isSingleTrack}
+            data={  [
+                {
+                label: '按时间',
+                value: '1',
+                },
+                {
+                label: '按轨迹',
+                value: '2',
+                },
+            ]} cols={1} 
+            value={this.state.type}
+            onOk={(obj)=>{
+                debugger
+                console.log(obj[0])
+                this.setState({
+                    type : obj,
+                    trackPattern:obj[0]
+                })
+            }}
+             className="forss">
+          <List.Item arrow="horizontal">类型</List.Item>
+        </Picker>
+               
+            <DatePicker
+              mode="date"
+              title="日期"
+              value={this.state.date}
+              onChange={this.onOk.bind(this)}
+              
+            >
+              <List.Item arrow="horizontal">日期</List.Item>
+            </DatePicker>
 
-                 <Col span={8}>
-                         <Slider    min={this.state.singleStartTimeStamp} max={this.state.singleEndTimeStamp} 
-                                onChange={
-                                    (value)=>{ 
-                                    console.log("Slider 改变 value: " + value)
+            <DatePicker
+            disabled={this.state.isSingleTrack}
+                mode="time"
+                format="HH:mm"
+                title="开始时间"
+                value={this.state.startTime}
+                onChange={
+                   (time)=>{
+                       
+                    console.log("startTime:" + time);        
+                    let timeString = moment(parseInt(time.getTime())).format("HH:mm:ss");   
+                    let singleStartTimeStamp = null;
+                    this.setState({
+                        singleStartTime:timeString,
+                        // singleStartTimeStamp:singleStartTimeStamp,
+                        // curPlayCount:singleStartTimeStamp,
+                        singleHisObj:{},
+                        startTime: time,
+                    })
+                   }
+                }
+                extra=""
+                >
+                 <List.Item arrow="horizontal">开始时间</List.Item>
+                </DatePicker>
 
-                                    if (this.state.singleEndTimeStamp != value){
-                                        // 清除已经存在的线
-                                        this.clearNaviLines()
-                                        this.clearMaker()
-                                    }                    
+                <DatePicker
+                disabled={this.state.isSingleTrack}
+                mode="time"
+                format="HH:mm"
+                title="结束时间"
+                value={this.state.endTime}
+                onChange={
+                   (time)=>{
+                    debugger
+                    // console.log(timeString);   
+                    // let singleEndTimeStamp = new Date(this.state.singleDate + " "  + timeString).getTime();
+                    let timeString = moment(parseInt(time.getTime())).format("HH:mm:ss");     
+                    let singleEndTimeStamp = null; 
+                        this.setState({
+                            singleEndTime:timeString,
+                            // singleEndTimeStamp:singleEndTimeStamp,
+                            // curPlayCount:this.state.singleStartTimeStamp,
+                            singleHisObj:{},
+                            endTime : time,
+                        })
+                   }
+                }
+                extra=""
+                >
+                 <List.Item arrow="horizontal">结束时间</List.Item>
+                </DatePicker>
 
-                                    this.setState({
-                                        curPlayCount: value,
-                                        isSingleTrack:false,//
-                                        points:[],
-                                    });
-                                }
-                            } 
-                            value={this.state.curPlayCount}
-                        tipFormatter={this.formatter.bind(this)} tooltipVisible   />
-                    </Col>
-                <Col span={2}>
-                    <Button  className={this.state.isSingleTrack===true?'isSingleTrack active':'isSingleTrack'}   onClick={()=>{this.singlePlay()}}>
+               
+            <Picker data={ 
+                    this.getSelectList()
+            } cols={1} 
+            disabled={this.state.isSingleTrack}
+            value={this.state.peopleObj}
+            onOk={(obj)=>{
+                debugger
+                console.log(obj[0])
+                this.setState({
+                    peopleObj : obj,
+                    singleLocatingEntity:obj[0],
+                    singleHisObj:{},
+                })
+            }}
+             className="forss">
+          <List.Item arrow="horizontal">人员</List.Item>
+        </Picker>
+
+                <Button   disabled={this.state.isSingleTrack}   onClick={(e)=>{this.singleOk(e)}}>加载轨迹</Button>
+    
+                <Button  className={this.state.isSingleTrack===true?'isSingleTrack active':'isSingleTrack'}   onClick={()=>{this.singlePlay()}}>
                                 {this.state.isSingleTrack===true?'暂停':' 播放'}
                     </Button>
-                </Col>
-                    
-            </Row>
-        // 获取所有人员
-        formItemList.push(row)
+    
+    
+        </div>);
+    
+    {/* <div style={this.getStyle()} id={'fengMap'}></div> */}
+    
+    const dia =   (<div>
+        <NavBar 
+            mode="light"
+            icon={<Icon type="left" onClick={this.goPage.bind(this,'home')} ></Icon>} 
+            rightContent={<Icon 
+            onClick=  {
+                (e)=>{
+                    e.preventDefault()
+                    this.onOpenChange()
+                }
+            } 
+            type="ellipsis" />} 
+       >历史轨迹</NavBar>
+        <Drawer
+            position="right"
+          className="my-drawer"
+          style={{ minHeight: document.documentElement.clientHeight }}
+          enableDragHandle
+          contentStyle={{ color: '#A6A6A6', textAlign: 'center', paddingTop: 42 }}
+          sidebar={sidebar}
+          open={this.state.open}
+          onOpenChange={this.onOpenChange.bind(this)}
+        >
+         <div style={this.getStyle()} id={'fengMap'}></div>
+        </Drawer>
+      </div>);
+    
+        formItemList.push(dia);
+
+
+
 
 
   const aa =  
@@ -1753,15 +1815,19 @@ handleChange=(ov)=>{
  */
 getSelectList=()=>{  
     let data = this.state.coodsTagList;
-    // console.log(data);
     if(!data){
         return [];
     } 
-    const options=[]
+ 
+    let arr= []
     data.map((item)=>{
-        options.push(<Option value={item.id} key={item.name}>{item.name}</Option>)
+        let proper =  {
+                label: item.name,
+                value: item.id,
+                }
+        arr.push(proper)
     })
-    return options
+    return arr
 }
 
 
@@ -1770,7 +1836,7 @@ getSelectList=()=>{
         const { Option } = Select;
         return (
             <div >
-                 <div style={this.getStyle()} id={'fengMap'}></div>
+                 
                     <div  id="fmbtnsGroup" className="fmbtnsGroup">
                         {this.initFormList()}              
                     </div>
