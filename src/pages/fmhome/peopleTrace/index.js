@@ -6,7 +6,7 @@ import Super from "./../../../super"
 import Units from './../../../units'
 import moment from 'moment';
 import { Select,  message } from 'antd';
-import { Drawer,Toast, Button, List, NavBar, Icon, Popover , SegmentedControl, DatePicker} from 'antd-mobile';
+import { Drawer,Toast,Picker,  Button, List, NavBar, Icon, Popover , SegmentedControl, DatePicker} from 'antd-mobile';
 import locale from 'antd/lib/date-picker/locale/zh_CN';
 
 const Option = Select.Option;
@@ -115,7 +115,8 @@ export default class PeopleTrace extends React.Component{
 
             // 抽屉开关
             open: false,
-            docked: true,
+            type : null,
+            date: null,
 
         }
     }
@@ -269,7 +270,7 @@ export default class PeopleTrace extends React.Component{
             //设置主题
             defaultThemeName: '2001',
           mapScaleLevelRange: [16, 23],       // 比例尺级别范围， 16级到23级
-          defaultMapScaleLevel: 18,          // 默认比例尺级别设置为19级
+          defaultMapScaleLevel: 17,          // 默认比例尺级别设置为19级
 
           //方向枚举型。可设置正南、正北、正东、正西、东南、西南等方向值。具体可参考fengmap.FMDirection类。
           defaultControlsPose: 200,
@@ -1125,7 +1126,7 @@ onOk=(ov)=>{
     console.log(locationTime)
     this.setState({
         locationTime : locationTime,
-
+        date : ov,
     })
 }
 
@@ -1240,7 +1241,9 @@ onOpenChange = (...args) => {
         open: !this.state.open,
     });
   }
-
+  goPage=(value)=>{
+    this.props.history.push(`/${value}`);
+}
 
 /**
  * 初始化按钮
@@ -1251,14 +1254,41 @@ initFormList=()=>{
     const formItemList=[];
 
     const sidebar = (<div>
-        <SegmentedControl
+        {/* <SegmentedControl
         
           values={['人员', '车辆', '物品']}
           onValueChange={(value)=>{    
                 console.log(value);    
                  this.setState({locationType:value})
                 }}
-        />
+        /> */}
+
+        <Picker data={  [
+                {
+                label: '人员',
+                value: '人员',
+                },
+                {
+                label: '车辆',
+                value: '车辆',
+                },
+                {
+                label: '物品',
+                value: '物品',
+                },
+            ]} cols={1} 
+            value={this.state.type}
+            onOk={(obj)=>{
+                debugger
+                console.log(obj[0])
+                this.setState({
+                    type : obj,
+                    locationType:obj[0]
+                })
+            }}
+             className="forss">
+          <List.Item arrow="horizontal">类型</List.Item>
+        </Picker>
            
         <DatePicker
           value={this.state.date}
@@ -1276,12 +1306,23 @@ initFormList=()=>{
 {/* <div style={this.getStyle()} id={'fengMap'}></div> */}
 
 const dia =   (<div>
-    <NavBar icon={<Icon type="ellipsis" />} 
-    onLeftClick={(e)=>{
-        e.preventDefault()
-        this.onOpenChange()
-        }}>人员追踪</NavBar>
+    <NavBar 
+    mode="light"
+    icon={<Icon type="left" onClick={this.goPage.bind(this,'home')} ></Icon>} 
+     rightContent={[
+        <Icon key="1" 
+        onClick=  {
+            (e)=>{
+            e.preventDefault()
+            this.onOpenChange()
+            }
+        } 
+        type="ellipsis" />,
+      ]}
+        >人员追踪</NavBar>
     <Drawer
+        style={{width:'80%'}}
+        position="right"
       className="my-drawer"
       style={{ minHeight: document.documentElement.clientHeight }}
       enableDragHandle
